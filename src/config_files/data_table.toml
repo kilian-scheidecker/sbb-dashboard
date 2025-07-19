@@ -1,0 +1,4 @@
+# Destination and departure times in minutes.
+[Winterthur]
+Uzwil = [8, 38]
+Frauenfeld = [1, 31]
