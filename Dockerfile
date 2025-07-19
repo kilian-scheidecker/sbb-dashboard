@@ -12,10 +12,18 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 # Ensure the installed binary is on the `PATH`
 ENV PATH="/root/.local/bin/:$PATH"
 
-RUN uv sync --no-cache
-
-COPY src/ /app/src/
-
+# Change the working directory
 WORKDIR /app
 
-RUN uv run fastapi dev src/main.py
+# Copy uv files
+COPY uv.lock .
+COPY pyproject.toml .
+
+# Install the venv with uv
+RUN uv sync --no-cache
+
+# Copy the application files
+COPY src/ /app/src/
+
+# Run the api
+CMD [ "uv", "run", "fastapi", "dev", "src/main.py", "--host", "0.0.0.0", "--port", "8080" ]
