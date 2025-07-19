@@ -28,10 +28,10 @@ def get_next_departure(
     # Find the next departure time for the departure - destination tuple
     try :
         next_departure = next(x for x in DATA_TABLE[departure][destination] if x > now.minute)
-        departure_time_str = now.replace(minute=next_departure).strftime('%Y-%m-%d %H:%M')
+        departure_time_str = now.replace(minute=next_departure).strftime('%H:%M')
     except StopIteration :
         next_departure = DATA_TABLE[departure][destination][0]
-        departure_time_str = now.replace(hour= now.hour+1, minute=next_departure).strftime('%Y-%m-%d %H:%M')
+        departure_time_str = now.replace(hour= now.hour+1, minute=next_departure).strftime('%H:%M')
 
     # Generate the next departure time as str
     
@@ -40,10 +40,8 @@ def get_next_departure(
     first_train = requests.get(
         url = "https://transport.opendata.ch/v1/stationboard",
         params = {
-            'station': DATA_TABLE[departure],
+            'station': departure,
             'datetime': departure_time_str,
-            'transportations': 'train',
-            'limit': '2'
         }
     ).json()['stationboard'][0]
 

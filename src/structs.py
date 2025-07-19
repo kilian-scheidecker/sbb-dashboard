@@ -30,7 +30,7 @@ class TrainInfo:
         ) :
         self.name = f"{category} {number}"
         self.destination = destination
-        self.departure_time = datetime.fromtimestamp(departure_time)
+        self.departure_time = datetime.fromtimestamp(departure_time).strftime('%H:%M')
         self.platform = int(platform)
         self.delay = int(delay)
 
