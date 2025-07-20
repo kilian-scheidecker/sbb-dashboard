@@ -1,0 +1,7 @@
+Build the container with : 
+
+"docker build -t 192.168.1.45:5000/sbb-api:latest . --no-cache"
+
+
+Push to the registry with :
+

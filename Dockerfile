@@ -25,5 +25,8 @@ RUN uv sync --no-cache
 # Copy the application files
 COPY src/ /app/src/
 
+# Specify the config file directory
+ENV DATA_TABLE_PATH="/app/src/config_files/data_table.toml"
+
 # Run the api
 CMD [ "uv", "run", "fastapi", "dev", "src/main.py", "--host", "0.0.0.0", "--port", "8080" ]

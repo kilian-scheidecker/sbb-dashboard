@@ -46,14 +46,26 @@ def get_next_departure(
     ).json()['stationboard'][0]
 
     # Return the train information
-    NextTrain = TrainInfo(
-        category = first_train['category'],
-        number = first_train['number'],
-        destination = first_train['to'],
-        departure_time = first_train['stop']['departureTimestamp'],
-        platform = first_train['stop']['platform'],
-        delay = first_train['stop']['delay'],
-    )
+    try :
+        NextTrain = TrainInfo(
+            category = first_train['category'],
+            number = first_train['number'],
+            destination = first_train['to'],
+            departure_time = first_train['stop']['departureTimestamp'],
+            platform = first_train['stop']['platform'],
+            delay = first_train['stop']['delay'],
+        )
+    
+    except TypeError :
+        NextTrain = TrainInfo(
+            category = first_train['category'],
+            number = first_train['number'],
+            destination = first_train['to'],
+            departure_time = first_train['stop']['departureTimestamp'],
+            platform = first_train['stop']['platform'],
+            delay = 0,
+        )
+
 
     return APIResponse.from_delay(delayed=(NextTrain.delay != 0), message=NextTrain.to_str())
 
