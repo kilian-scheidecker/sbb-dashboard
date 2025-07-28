@@ -34,38 +34,34 @@ def get_next_departure(
         departure_time_str = now.replace(hour= now.hour+1, minute=next_departure).strftime('%H:%M')
 
     # Generate the next departure time as str
-    
+    complete_str = f'{datetime.now().strftime('%Y-%m-%d')}T{departure_time_str}'
 
     # Request to transport API
-    first_train = requests.get(
+    journeys = requests.get(
         url = "https://transport.opendata.ch/v1/stationboard",
         params = {
             'station': departure,
             'datetime': departure_time_str,
         }
-    ).json()['stationboard'][0]
+    ).json()['stationboard']
+
+    # Find the correct train in the list of journeys
+    for journey in journeys :
+        if complete_str in journey['stop']['departure'] and destination in [d['station']['name'] for d in journey['passList']]:
+            break
 
     # Return the train information
-    try :
-        NextTrain = TrainInfo(
-            category = first_train['category'],
-            number = first_train['number'],
-            destination = first_train['to'],
-            departure_time = first_train['stop']['departureTimestamp'],
-            platform = first_train['stop']['platform'],
-            delay = first_train['stop']['delay'],
-        )
-    
-    except TypeError :
-        NextTrain = TrainInfo(
-            category = first_train['category'],
-            number = first_train['number'],
-            destination = first_train['to'],
-            departure_time = first_train['stop']['departureTimestamp'],
-            platform = first_train['stop']['platform'],
-            delay = 0,
-        )
+    NextTrain = TrainInfo(
+        category = journey['category'],
+        number = journey['number'],
+        destination = journey['to'],
+        departure_time = journey['stop']['departureTimestamp'],
+        platform = journey['stop']['platform'],
+        delay = journey['stop']['delay'],
+    )
 
 
-    return APIResponse.from_delay(delayed=(NextTrain.delay != 0), message=NextTrain.to_str())
+    return APIResponse.from_delay(
+        delayed = (NextTrain.delay != 0),
+        message = NextTrain.to_str())
 

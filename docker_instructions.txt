@@ -5,3 +5,4 @@ Build the container with :
 
 Push to the registry with :
 
+"docker push 192.168.1.45:5000/sbb-api:latest"

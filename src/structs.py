@@ -26,13 +26,13 @@ class TrainInfo:
             destination: str,
             departure_time: int,
             platform: Union[str, int],
-            delay: int
+            delay: int | None
         ) :
         self.name = f"{category} {number}"
         self.destination = destination
         self.departure_time = datetime.fromtimestamp(departure_time).strftime('%H:%M')
         self.platform = int(platform)
-        self.delay = int(delay)
+        self.delay = int(delay) if delay is not None else 0
 
 
     def to_str(self) :
