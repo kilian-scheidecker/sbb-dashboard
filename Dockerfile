@@ -20,7 +20,7 @@ COPY uv.lock .
 COPY pyproject.toml .
 
 # Install the venv with uv
-RUN uv sync --no-cache
+RUN uv sync --no-cache --frozen --no-dev
 
 # Copy the application files
 COPY src/ /app/src/
