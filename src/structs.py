@@ -26,16 +26,25 @@ class TrainInfo:
             destination: str,
             departure_time: int,
             platform: Union[str, int],
-            delay: int | None
+            delay: int | None,
+            cancelled: bool
         ) :
         self.name = f"{category} {number}"
         self.destination = destination
         self.departure_time = datetime.fromtimestamp(departure_time).strftime('%H:%M')
         self.platform = int(platform)
         self.delay = int(delay) if delay is not None else 0
+        self.cancelled = cancelled
 
 
     def to_str(self) :
+
+        if self.cancelled:
+            return (
+                f"WARNING: The {self.name} to {self.destination} leaving at {self.departure_time} "
+                f"from platform {self.platform} is cancelled."
+            )
+
         if self.delay == 0 :
             return (
                 f"The {self.name} to {self.destination} leaving at {self.departure_time} "

@@ -18,50 +18,69 @@ def get_next_departure(
         destination: str
     ) -> APIResponse :
 
-    if departure not in DATA_TABLE.keys() :
-        raise NotImplementedError(f'Departure from {departure} is not supported yet. Please add it to the configuration file "config_files/data_table.yaml".')
-    if destination not in DATA_TABLE[departure].keys() :
-        raise NotImplementedError(f'Destination {destination} is not supported yet with departure from {departure}. Please add it to the configuration file "config_files/data_table.yaml".')
+    try: 
+        # Check if departure and destination are supported
+        if departure not in DATA_TABLE.keys() :
+            raise NotImplementedError(f'Departure from {departure} is not supported yet. Please add it to the configuration file "config_files/data_table.yaml".')
+        if destination not in DATA_TABLE[departure].keys() :
+            raise NotImplementedError(f'Destination {destination} is not supported yet with departure from {departure}. Please add it to the configuration file "config_files/data_table.yaml".')
 
-    now = datetime.now()
+        now = datetime.now()
 
-    # Find the next departure time for the departure - destination tuple
-    try :
-        next_departure = next(x for x in DATA_TABLE[departure][destination] if x > now.minute)
-        departure_time_str = now.replace(minute=next_departure).strftime('%H:%M')
-    except StopIteration :
-        next_departure = DATA_TABLE[departure][destination][0]
-        departure_time_str = now.replace(hour= now.hour+1, minute=next_departure).strftime('%H:%M')
+        # Find the next departure time for the departure - destination tuple
+        try :
+            next_departure = next(x for x in DATA_TABLE[departure][destination] if x > now.minute)
+            departure_time_str = now.replace(minute=next_departure).strftime('%H:%M')
+        except StopIteration :
+            next_departure = DATA_TABLE[departure][destination][0]
+            departure_time_str = now.replace(hour= now.hour+1, minute=next_departure).strftime('%H:%M')
 
-    # Generate the next departure time as str
-    complete_str = f'{datetime.now().strftime('%Y-%m-%d')}T{departure_time_str}'
+        # Generate the next departure time as str
+        complete_str = f'{datetime.now().strftime('%Y-%m-%d')}T{departure_time_str}'
 
-    # Request to transport API
-    journeys = requests.get(
-        url = "https://transport.opendata.ch/v1/stationboard",
-        params = {
-            'station': departure,
-            'datetime': departure_time_str,
-        }
-    ).json()['stationboard']
+        # Request to transport API
+        journeys = requests.get(
+            url = "https://transport.opendata.ch/v1/stationboard",
+            params = {
+                'station': departure,
+                'datetime': departure_time_str,
+            },
+            timeout=180
+        ).json()['stationboard']
 
-    # Find the correct train in the list of journeys
-    for journey in journeys :
-        if complete_str in journey['stop']['departure'] and destination in [d['station']['name'] for d in journey['passList']]:
-            break
+        # Find the correct train in the list of journeys
+        for journey in journeys :
+            if complete_str in journey['stop']['departure'] and destination in [d['station']['name'] for d in journey['passList']]:
+                break
 
-    # Return the train information
-    NextTrain = TrainInfo(
-        category = journey['category'],
-        number = journey['number'],
-        destination = journey['to'],
-        departure_time = journey['stop']['departureTimestamp'],
-        platform = journey['stop']['platform'],
-        delay = journey['stop']['delay'],
-    )
+        # Check if cancelled
+        if (
+            journey['stop']['prognosis']['arrival'] is None
+            and 
+            journey['stop']['prognosis']['departure'] is None
+            ):
+            cancelled = True
+        else: 
+            cancelled = False
 
 
-    return APIResponse.from_delay(
-        delayed = (NextTrain.delay != 0),
-        message = NextTrain.to_str())
+        # Return the train information
+        NextTrain = TrainInfo(
+            category = journey['category'],
+            number = journey['number'],
+            destination = journey['to'],
+            departure_time = journey['stop']['departureTimestamp'],
+            platform = journey['stop']['platform'],
+            delay = journey['stop']['delay'],
+            cancelled = cancelled
+        )
 
+
+        return APIResponse.from_delay(
+            delayed = (NextTrain.delay != 0),
+            message = NextTrain.to_str())
+
+    except Exception as exc:
+        return APIResponse.from_delay(
+            delayed = (NextTrain.delay != 0),
+            message = f'Something went wrong with the API, please use SBB app: {exc}')
